@@ -38,13 +38,6 @@ const MeetingStage: FC = () => {
         error, // Join container error
     } = liveShareHooks.useSharedObjects();
 
-    // Notification hook
-    const {
-        notificationStarted, // boolean that is true once notificationEvent.initialize() is called
-        notificationToDisplay, // most recent notification that was sent through notificationEvent
-        sendNotification, // callback method to send a notification through notificationEvent
-    } = liveShareHooks.useNotifications(notificationEvent, context);
-
     // Presence hook
     const {
         presenceStarted, // boolean that is true once presence.initialize() is called
@@ -56,6 +49,13 @@ const MeetingStage: FC = () => {
         presence,
         context
     );
+
+    // Notification hook
+    const {
+        notificationStarted, // boolean that is true once notificationEvent.initialize() is called
+        notificationToDisplay, // most recent notification that was sent through notificationEvent
+        sendNotification, // callback method to send a notification through notificationEvent
+    } = liveShareHooks.useNotifications(notificationEvent, localUser);
 
     // Take control map
     const {

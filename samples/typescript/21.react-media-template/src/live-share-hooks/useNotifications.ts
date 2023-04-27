@@ -5,8 +5,11 @@
 
 // eslint-disable-next-line
 import { LiveEvent } from "@microsoft/live-share";
-import { app } from "@microsoft/teams-js";
+import {
+    LivePresenceUser,
+} from "@microsoft/live-share";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { IUserData } from "./usePresence";
 
 /**
  * Hook for sending notifications to display across clients
@@ -14,7 +17,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
  * @remarks
  *
  * @param {LiveEvent} notificationEvent presence object from Fluid container.
- * @param {microsoftTeams.app.Context} context Teams context object
+ * @param {LivePresenceUser<IUserData>} localUser local user's presence object
  * @returns `{notificationStarted, notificationToDisplay, sendNotification}` where:
  * - `notificationStarted` is a boolean indicating whether `notificationEvent.initialize()` has been called.
  * - `notificationToDisplay` is the most recent notification to display.
@@ -22,7 +25,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
  */
 export const useNotifications = (
     notificationEvent?: LiveEvent,
-    context?: app.Context
+    localUser?: LivePresenceUser<IUserData>
 ) => {
     const startedInitializingRef = useRef(false);
     const [notificationToDisplay, setNotificationToDisplay] =
@@ -32,16 +35,14 @@ export const useNotifications = (
     const sendNotification = useCallback(
         async (notificationText: string) => {
             console.log("useNotifications: sending a notification");
-            const userPrincipalName =
-                context?.user?.userPrincipalName ?? "Someone@contoso.com";
-            const name = userPrincipalName.split("@")[0];
+            const name = localUser?.displayName ?? "Someone";
             // Emit the event
             notificationEvent?.sendEvent({
                 text: notificationText,
                 senderName: name,
             });
         },
-        [notificationEvent, context]
+        [notificationEvent, localUser]
     );
 
     useEffect(() => {
