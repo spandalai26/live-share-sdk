@@ -51,6 +51,15 @@ const serviceEndpointMap = new Map<string | undefined, string>()
     );
 
 /**
+ * Key for window global reference to loadable objects.
+ * TODO: replace window reference with a better static registry system. Originally tried DynamicObjectRegistry._dynamicLoadableObjects
+ * variable but that didn't work when testing locally, since all local package builds have separate symlink instances and thus have separate
+ * static DynamicObjectRegistry classes.
+ */
+const GLOBAL_LIVE_SHARE_HOST_WINDOW_KEY = "@microsoft/live-share:LiveShareHost";
+const GLOBAL_LIVE_SHARE_TIMESTAMP_PROVIDER_KEY = "@microsoft/live-share:TimestampProvider";
+
+/**
  * Options used to configure the `LiveShareClient` class.
  */
 export interface ILiveShareClientOptions {
@@ -80,12 +89,39 @@ export class LiveShareClient {
         undefined,
         undefined
     );
+    private static get host(): ILiveShareHost {
+        if (typeof window === "undefined") {
+            return this._host;
+        }
+        return ((window as any)[GLOBAL_LIVE_SHARE_HOST_WINDOW_KEY] || this._host) as ILiveShareHost;
+    }
+    private static set host(value: ILiveShareHost) {
+        if (typeof window === "undefined") {
+            this._host = value;
+            return;
+        }
+        (window as any)[GLOBAL_LIVE_SHARE_HOST_WINDOW_KEY] = value;
+    }
     private readonly _options: ILiveShareClientOptions;
     private static _timestampProvider: ITimestampProvider =
         new LocalTimestampProvider();
-    private static _roleVerifier: IRoleVerifier = new RoleVerifier(
-        LiveShareClient._host
-    );
+    private static get timestampProvider(): ITimestampProvider {
+        if (typeof window === "undefined") {
+            return this._timestampProvider;
+        }
+        return ((window as any)[GLOBAL_LIVE_SHARE_TIMESTAMP_PROVIDER_KEY] || this._timestampProvider) as ITimestampProvider;
+    }
+    private static set timestampProvider(value: ITimestampProvider) {
+        if (typeof window === "undefined") {
+            this._timestampProvider = value;
+            return;
+        }
+        (window as any)[GLOBAL_LIVE_SHARE_TIMESTAMP_PROVIDER_KEY] = value;
+    }
+    
+    private static get _roleVerifier(): IRoleVerifier {
+        return new RoleVerifier(LiveShareClient.host);
+    }
 
     /**
      * Creates a new `LiveShareClient` instance.
@@ -99,10 +135,9 @@ export class LiveShareClient {
         }
 
         // Save props
-        LiveShareClient._host = new PolyfillHostDecorator(
+        LiveShareClient.host = new PolyfillHostDecorator(
             new LiveShareHostDecorator(host)
         );
-        LiveShareClient._roleVerifier = new RoleVerifier(LiveShareClient._host);
         this._options = Object.assign({} as ILiveShareClientOptions, options);
     }
 
@@ -141,7 +176,6 @@ export class LiveShareClient {
         performance.mark(`TeamsSync: join container`);
         try {
             // Configure role verifier and timestamp provider
-            const pRoleVerifier = this.initializeRoleVerifier();
             const pTimestampProvider = this.initializeTimestampProvider();
 
             // Initialize FRS connection config
@@ -151,7 +185,7 @@ export class LiveShareClient {
                 | undefined = this._options.connection;
             if (!config) {
                 const frsTenantInfo =
-                    await LiveShareClient._host.getFluidTenantInfo();
+                    await LiveShareClient.host.getFluidTenantInfo();
 
                 // Compute endpoint
                 let endpoint: string | undefined =
@@ -184,7 +218,7 @@ export class LiveShareClient {
                         tenantId: frsTenantInfo.tenantId,
                         endpoint: endpoint!,
                         tokenProvider: new LiveShareTokenProvider(
-                            LiveShareClient._host
+                            LiveShareClient.host
                         ),
                     } as AzureRemoteConnectionConfig;
                 }
@@ -207,7 +241,6 @@ export class LiveShareClient {
             // Wait in parallel for everything to finish initializing.
             const result = await Promise.all([
                 pContainer,
-                pRoleVerifier,
                 pTimestampProvider,
             ]);
 
@@ -233,7 +266,7 @@ export class LiveShareClient {
                     try {
                         const clientId = connections[i]?.id;
                         if (clientId) {
-                            await LiveShareClient._host.registerClientId(
+                            await LiveShareClient.host.registerClientId(
                                 clientId
                             );
                         }
@@ -255,41 +288,27 @@ export class LiveShareClient {
     /**
      * @hidden
      */
-    protected async initializeRoleVerifier(): Promise<void> {
-        if (!this.isTesting) {
-            // Register role verifier as current verifier for events
-            LiveShareClient._roleVerifier = new RoleVerifier(
-                LiveShareClient._host
-            );
-        }
-
-        return Promise.resolve();
-    }
-
-    /**
-     * @hidden
-     */
     protected async initializeTimestampProvider(): Promise<void> {
         if (!this.isTesting) {
             // Was a custom timestamp provider passed in.
             if (this._options.timestampProvider) {
                 // Use configured one
-                LiveShareClient._timestampProvider =
+                LiveShareClient.timestampProvider =
                     this._options.timestampProvider;
             } else {
                 // Create a new host based timestamp provider
-                LiveShareClient._timestampProvider = new HostTimestampProvider(
-                    LiveShareClient._host
+                LiveShareClient.timestampProvider = new HostTimestampProvider(
+                    LiveShareClient.host
                 );
             }
 
             // Start provider if needed
             if (
-                typeof (LiveShareClient._timestampProvider as TimestampProvider)
+                typeof (LiveShareClient.timestampProvider as TimestampProvider)
                     .start == "function"
             ) {
                 return (
-                    LiveShareClient._timestampProvider as TimestampProvider
+                    LiveShareClient.timestampProvider as TimestampProvider
                 ).start();
             }
         }
@@ -308,7 +327,7 @@ export class LiveShareClient {
         created: boolean;
     }> {
         // Get container ID mapping
-        const containerInfo = await LiveShareClient._host.getFluidContainerId();
+        const containerInfo = await LiveShareClient.host.getFluidContainerId();
 
         // Create container on first access
         if (containerInfo.shouldCreate) {
@@ -366,7 +385,7 @@ export class LiveShareClient {
         const newContainerId = await container.attach();
 
         // Attempt to save container ID mapping
-        const containerInfo = await LiveShareClient._host.setFluidContainerId(
+        const containerInfo = await LiveShareClient.host.setFluidContainerId(
             newContainerId
         );
         if (containerInfo.containerState != ContainerState.added) {
@@ -396,7 +415,7 @@ export class LiveShareClient {
      * Returns the current timestamp as the number of milliseconds sine the Unix Epoch.
      */
     public static getTimestamp(): number {
-        return LiveShareClient._timestampProvider.getTimestamp();
+        return LiveShareClient.timestampProvider.getTimestamp();
     }
 
     /**
@@ -418,7 +437,7 @@ export class LiveShareClient {
     public static getClientInfo(
         clientId: string
     ): Promise<IClientInfo | undefined> {
-        return LiveShareClient._host.getClientInfo(clientId);
+        return LiveShareClient.host.getClientInfo(clientId);
     }
 
     /**
@@ -426,14 +445,6 @@ export class LiveShareClient {
      * @param provider The timestamp provider to use.
      */
     public static setTimestampProvider(provider: ITimestampProvider): void {
-        LiveShareClient._timestampProvider = provider;
-    }
-
-    /**
-     * @hidden
-     * Assigns a new role verifier.
-     */
-    public static setRoleVerifier(provider: IRoleVerifier): void {
-        LiveShareClient._roleVerifier = provider;
+        LiveShareClient.timestampProvider = provider;
     }
 }
