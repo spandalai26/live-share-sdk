@@ -8,7 +8,12 @@ import { app, pages, LiveShareHost } from "@microsoft/teams-js";
 import { LiveShareClient, TestLiveShareHost } from "@microsoft/live-share";
 import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
 
+<<<<<<< HEAD
 const searchParams = new URL(window.location).searchParams;
+=======
+const searchParams = new URL(window.location.href).searchParams;
+const IN_TEAMS = searchParams.get("inTeams") === "1";
+>>>>>>> bcdddf8bf71aea1b22d95ef52ecbd2451acb64b6
 const root = document.getElementById("content");
 
 // Define container schema
@@ -30,10 +35,24 @@ async function start() {
   // Check for page to display
   let view = searchParams.get("view") || "stage";
 
+<<<<<<< HEAD
   // Check if we are running on stage.
   if (!!searchParams.get("inTeams")) {
     // Initialize teams app
     await app.initialize();
+=======
+    // Check if we are running on stage.
+    if (IN_TEAMS) {
+        // Initialize teams app
+        await app.initialize();
+        // Get Teams app context to get the initial theme
+        const context = await app.getContext();
+        theme = context.app.theme === "default" ? "light" : "dark";
+        app.registerOnThemeChangeHandler((theme) => {
+            theme = theme === "default" ? "light" : "dark";
+        });
+    }
+>>>>>>> bcdddf8bf71aea1b22d95ef52ecbd2451acb64b6
 
     // Get our frameContext from context of our app in Teams
     const context = await app.getContext();
@@ -61,10 +80,16 @@ async function start() {
 start().catch((error) => console.error(error));
 
 async function joinContainer() {
+<<<<<<< HEAD
     // Are we running in teams? If so, use LiveShareHost, otherwise use TestLiveShareHost
     const host = !!searchParams.get("inTeams")
       ? LiveShareHost.create()
       : TestLiveShareHost.create();
+=======
+    // Are we running in teams?
+    const host = IN_TEAMS ? LiveShareHost.create() : TestLiveShareHost.create();
+
+>>>>>>> bcdddf8bf71aea1b22d95ef52ecbd2451acb64b6
     // Create client
     const liveShare = new LiveShareClient(host);
     // Join container
@@ -94,6 +119,7 @@ function renderStage(diceMap, elem) {
   updateDice(1);
 }
 
+<<<<<<< HEAD
 
 rollButton.onclick = () =>
   diceMap.set("dice-value-key", Math.floor(Math.random() * 6) + 1);
@@ -158,3 +184,6 @@ function renderSettings(elem) {
   // Enable the Save button in config dialog
   pages.config.setValidityState(true);
 }
+=======
+start().catch((error) => renderError(root, error, theme));
+>>>>>>> bcdddf8bf71aea1b22d95ef52ecbd2451acb64b6

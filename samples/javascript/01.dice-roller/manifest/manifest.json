@@ -1,8 +1,13 @@
 {
-    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.12/MicrosoftTeams.schema.json",
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.15/MicrosoftTeams.schema.json",
     "version": "1.0.1",
+<<<<<<< HEAD
     "id": "8c267da4-81da-4a29-990d-a9181eb4bda7",
     "manifestVersion": "1.12",
+=======
+    "manifestVersion": "1.15",
+    "id": "2bbeb6ca-1b4a-4d1d-bc14-d644031e3f8b",
+>>>>>>> bcdddf8bf71aea1b22d95ef52ecbd2451acb64b6
     "packageName": "com.microsoft.teams.livesharediceroller",
     "name": {
         "short": "DiceRollerLiveShare",
@@ -26,7 +31,11 @@
     "accentColor": "#FFFFFF",
     "configurableTabs": [
         {
+<<<<<<< HEAD
             "configurationUrl": "https://8db6-2600-4040-a0b5-9100-2c47-f67e-cfb7-81ff.ngrok-free.app",
+=======
+            "configurationUrl": "https://ryanbliss.ngrok.io/?view=config&inTeams=1&load=1",
+>>>>>>> bcdddf8bf71aea1b22d95ef52ecbd2451acb64b6
             "canUpdateConfiguration": false,
             "scopes": [
                 "groupchat"
