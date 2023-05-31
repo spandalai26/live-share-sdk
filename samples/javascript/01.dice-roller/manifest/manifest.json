@@ -1,19 +1,19 @@
 {
     "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.12/MicrosoftTeams.schema.json",
     "version": "1.0.1",
+    "id": "8c267da4-81da-4a29-990d-a9181eb4bda7",
     "manifestVersion": "1.12",
-    "id": "<<YOUR-MICROSOFT-APP-ID>>",
     "packageName": "com.microsoft.teams.livesharediceroller",
     "name": {
         "short": "DiceRollerLiveShare",
         "full": "Dice Roller Live Share"
     },
     "developer": {
-        "name": "Your name here",
+        "name": "Sathya Pandalai",
         "mpnId": "",
-        "websiteUrl": "https://www.example.com",
-        "privacyUrl": "https://www.example.com/PrivacyStatement",
-        "termsOfUseUrl": "https://www.example.com/TermsOfUse"
+        "websiteUrl": "https://www.lateetud.com",
+        "privacyUrl": "https://www.lateetud.com",
+        "termsOfUseUrl": "https://www.lateetud.com"
     },
     "description": {
         "short": "Live Share version of Dice Roller",
@@ -26,7 +26,7 @@
     "accentColor": "#FFFFFF",
     "configurableTabs": [
         {
-            "configurationUrl": "https://<<BASE_URI_DOMAIN>>/?view=config&inTeams=1&load=1",
+            "configurationUrl": "https://8db6-2600-4040-a0b5-9100-2c47-f67e-cfb7-81ff.ngrok-free.app",
             "canUpdateConfiguration": false,
             "scopes": [
                 "groupchat"
@@ -38,11 +38,11 @@
         }
     ],
     "validDomains": [
-        "*.ngrok.io"
+        "*.ngrok.io",
+        "*.ngrok-free.app"
     ],
     "authorization": {
         "permissions": {
-            "orgWide": [],
             "resourceSpecific": [
                 {
                     "name": "MeetingStage.Write.Chat",
